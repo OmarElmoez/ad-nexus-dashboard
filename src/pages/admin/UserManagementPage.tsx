@@ -1,11 +1,12 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -15,10 +16,36 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCampaignStore } from "@/store/useCampaignStore";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Search, Shield, User } from "lucide-react";
 
 const UserManagementPage = () => {
   const { users, fetchUsers, updateUser } = useUserStore();
   const { campaigns, fetchCampaigns, toggleCampaignStatus } = useCampaignStore();
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   
   useEffect(() => {
     fetchUsers();
@@ -47,6 +74,25 @@ const UserManagementPage = () => {
     });
   };
   
+  // Filter and paginate users
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
+  
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
   return (
     <div className="space-y-6">
       <div>
@@ -62,6 +108,50 @@ const UserManagementPage = () => {
           <CardDescription>
             View and manage users and their campaign access.
           </CardDescription>
+          <div className="flex flex-col md:flex-row gap-4 mt-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select
+              value={roleFilter}
+              onValueChange={setRoleFilter}
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(parseInt(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[150px]">
+                <SelectValue placeholder="Rows per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="5">5 per page</SelectItem>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -75,8 +165,8 @@ const UserManagementPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.length > 0 ? (
-                users.map((user) => {
+              {currentUsers.length > 0 ? (
+                currentUsers.map((user) => {
                   const userCampaigns = getUserCampaigns(user.id);
                   const hasActiveCampaigns = userCampaigns.some(c => c.status === "active");
                   
@@ -95,8 +185,19 @@ const UserManagementPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.role === "admin" ? "default" : "outline"}>
-                          {user.role === "admin" ? "Admin" : "User"}
+                        <Badge variant={user.role === "admin" ? "default" : "outline"}
+                               className={user.role === "admin" ? "bg-purple-500" : ""}>
+                          {user.role === "admin" ? (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3 mr-1" />
+                              Admin
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3 mr-1" />
+                              User
+                            </div>
+                          )}
                         </Badge>
                       </TableCell>
                       <TableCell>{userCampaigns.length}</TableCell>
@@ -107,7 +208,7 @@ const UserManagementPage = () => {
                             onCheckedChange={(checked) => toggleAllUserCampaigns(user.id, checked)}
                             disabled={userCampaigns.length === 0}
                           />
-                          <span>
+                          <span className={hasActiveCampaigns ? "text-green-500" : "text-gray-500"}>
                             {hasActiveCampaigns ? "Some Active" : "All Paused"}
                           </span>
                         </div>
@@ -136,12 +237,92 @@ const UserManagementPage = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    <p className="text-muted-foreground">No users found.</p>
+                    {searchTerm || roleFilter !== "all" ? (
+                      <p className="text-muted-foreground">No users match your search criteria.</p>
+                    ) : (
+                      <p className="text-muted-foreground">No users found.</p>
+                    )}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+          
+          {filteredUsers.length > 0 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} 
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = idx + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = idx + 1;
+                      if (idx === 4) return (
+                        <PaginationItem key={idx}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + idx;
+                      if (idx === 0) return (
+                        <PaginationItem key={idx}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    } else {
+                      if (idx === 0) return (
+                        <PaginationItem key={idx}>
+                          <PaginationLink onClick={() => handlePageChange(1)}>1</PaginationLink>
+                        </PaginationItem>
+                      );
+                      if (idx === 1) return (
+                        <PaginationItem key={idx}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                      if (idx === 3) return (
+                        <PaginationItem key={idx}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                      if (idx === 4) return (
+                        <PaginationItem key={idx}>
+                          <PaginationLink onClick={() => handlePageChange(totalPages)}>{totalPages}</PaginationLink>
+                        </PaginationItem>
+                      );
+                      pageNum = currentPage;
+                    }
+                    
+                    return (
+                      <PaginationItem key={idx}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(pageNum)}
+                          isActive={pageNum === currentPage}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} 
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

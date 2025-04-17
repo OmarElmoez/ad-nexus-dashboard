@@ -20,12 +20,67 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Calendar as CalendarIcon, 
+  Check, 
+  Edit, 
+  Facebook, 
+  Linkedin, 
+  MoreHorizontal, 
+  Pause, 
+  Play, 
+  Plus, 
+  Search as SearchIcon, 
+  Trash2
+} from "lucide-react";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Campaign, PlatformType } from "@/store/useCampaignStore";
 
 const CampaignsPage = () => {
   const { user } = useAuthStore();
-  const { campaigns, fetchCampaigns, toggleCampaignStatus, deleteCampaign } = useCampaignStore();
+  const { campaigns, fetchCampaigns, toggleCampaignStatus, deleteCampaign, createCampaign, updateCampaign } = useCampaignStore();
+  
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
+  
+  // Form states for create dialog
+  const [name, setName] = useState("");
+  const [budget, setBudget] = useState("");
+  const [platforms, setPlatforms] = useState<PlatformType[]>([]);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
+  // Form states for edit dialog
+  const [editStatus, setEditStatus] = useState<"active" | "paused" | "draft">("active");
+  const [editPlatforms, setEditPlatforms] = useState<PlatformType[]>([]);
   
   useEffect(() => {
     // If admin, fetch all campaigns, otherwise fetch user's campaigns
@@ -36,23 +91,87 @@ const CampaignsPage = () => {
     }
   }, [fetchCampaigns, user]);
 
+  const handleCreateCampaign = () => {
+    if (!name || !budget || platforms.length === 0 || !startDate || !user?.id) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    createCampaign({
+      name,
+      budget: parseFloat(budget),
+      platforms,
+      startDate,
+      endDate,
+      status: "draft",
+      userId: user.id
+    });
+    
+    toast.success("Campaign created successfully!");
+    setIsCreateDialogOpen(false);
+    resetCreateForm();
+  };
+  
+  const resetCreateForm = () => {
+    setName("");
+    setBudget("");
+    setPlatforms([]);
+    setStartDate(new Date());
+    setEndDate(undefined);
+  };
+  
+  const handleEditCampaign = () => {
+    if (!currentCampaign) return;
+    
+    updateCampaign(currentCampaign.id, {
+      platforms: editPlatforms,
+      status: editStatus
+    });
+    
+    toast.success("Campaign updated successfully!");
+    setIsEditDialogOpen(false);
+  };
+  
+  const openEditDialog = (campaign: Campaign) => {
+    setCurrentCampaign(campaign);
+    setEditStatus(campaign.status);
+    setEditPlatforms([...campaign.platforms]);
+    setIsEditDialogOpen(true);
+  };
+  
+  const openDeleteAlert = (campaign: Campaign) => {
+    setCurrentCampaign(campaign);
+    setIsDeleteAlertOpen(true);
+  };
+  
+  const handleDeleteCampaign = () => {
+    if (!currentCampaign) return;
+    
+    deleteCampaign(currentCampaign.id);
+    toast.success("Campaign deleted successfully!");
+    setIsDeleteAlertOpen(false);
+  };
+
   const getPlatformBadge = (platform: string) => {
     switch (platform) {
       case "google":
         return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+          <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 flex items-center gap-1">
+            <SearchIcon className="h-3 w-3" />
             Google
           </Badge>
         );
       case "meta":
         return (
-          <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-indigo-200">
+          <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 flex items-center gap-1">
+            <Facebook className="h-3 w-3" />
             Meta
           </Badge>
         );
       case "linkedin":
         return (
-          <Badge variant="outline" className="bg-sky-50 text-sky-600 border-sky-200">
+          <Badge variant="outline" className="bg-cyan-50 text-cyan-600 border-cyan-200 flex items-center gap-1">
+            <Linkedin className="h-3 w-3" />
             LinkedIn
           </Badge>
         );
@@ -67,13 +186,15 @@ const CampaignsPage = () => {
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
+            <Play className="h-3 w-3" />
             Active
           </Badge>
         );
       case "paused":
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 flex items-center gap-1">
+            <Pause className="h-3 w-3" />
             Paused
           </Badge>
         );
@@ -91,11 +212,7 @@ const CampaignsPage = () => {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return format(new Date(date), "PPP");
   };
 
   return (
@@ -107,12 +224,10 @@ const CampaignsPage = () => {
             Manage your advertising campaigns across multiple platforms.
           </p>
         </div>
-        <Link to="/dashboard/create-campaign">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Campaign
-          </Button>
-        </Link>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Campaign
+        </Button>
       </div>
 
       <Card>
@@ -176,19 +291,12 @@ const CampaignsPage = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => toggleCampaignStatus(campaign.id)}
-                          >
-                            {campaign.status === "active" ? "Pause" : "Activate"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={`/dashboard/edit-campaign/${campaign.id}`}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Link>
+                          <DropdownMenuItem onClick={() => openEditDialog(campaign)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit Campaign
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => deleteCampaign(campaign.id)}
+                            onClick={() => openDeleteAlert(campaign)}
                             className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -207,12 +315,10 @@ const CampaignsPage = () => {
                       <p className="text-muted-foreground mb-4">
                         Create your first advertising campaign to get started.
                       </p>
-                      <Link to="/dashboard/create-campaign">
-                        <Button>
-                          <Plus className="mr-2 h-4 w-4" />
-                          New Campaign
-                        </Button>
-                      </Link>
+                      <Button onClick={() => setIsCreateDialogOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Campaign
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -221,6 +327,282 @@ const CampaignsPage = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Create Campaign Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[550px] animate-in fade-in-0 zoom-in-95 duration-300">
+          <DialogHeader>
+            <DialogTitle>Create New Campaign</DialogTitle>
+            <DialogDescription>
+              Create a new advertising campaign across multiple platforms.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Campaign Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter campaign name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="budget">Budget ($)</Label>
+              <Input
+                id="budget"
+                type="number"
+                placeholder="Enter budget amount"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Platforms</Label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={platforms.includes("google")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setPlatforms([...platforms, "google"]);
+                      } else {
+                        setPlatforms(platforms.filter(p => p !== "google"));
+                      }
+                    }} 
+                  />
+                  <Label>Google</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={platforms.includes("meta")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setPlatforms([...platforms, "meta"]);
+                      } else {
+                        setPlatforms(platforms.filter(p => p !== "meta"));
+                      }
+                    }}
+                  />
+                  <Label>Meta</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    checked={platforms.includes("linkedin")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setPlatforms([...platforms, "linkedin"]);
+                      } else {
+                        setPlatforms(platforms.filter(p => p !== "linkedin"));
+                      }
+                    }}
+                  />
+                  <Label>LinkedIn</Label>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="grid gap-2">
+                <Label>End Date (Optional)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      disabled={(date) => (startDate ? date < startDate : false)}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCampaign}>Create Campaign</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Campaign Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[450px] animate-in fade-in-0 zoom-in-95 duration-300">
+          <DialogHeader>
+            <DialogTitle>Edit Campaign</DialogTitle>
+            <DialogDescription>
+              Update campaign status and platform settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Campaign Status</Label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="active-status"
+                    checked={editStatus === "active"} 
+                    onCheckedChange={(checked) => {
+                      if (checked) setEditStatus("active");
+                    }}
+                  />
+                  <Label htmlFor="active-status" className="flex items-center">
+                    <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                    Active
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="paused-status"
+                    checked={editStatus === "paused"} 
+                    onCheckedChange={(checked) => {
+                      if (checked) setEditStatus("paused");
+                    }}
+                  />
+                  <Label htmlFor="paused-status" className="flex items-center">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 mr-2"></div>
+                    Paused
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="draft-status"
+                    checked={editStatus === "draft"} 
+                    onCheckedChange={(checked) => {
+                      if (checked) setEditStatus("draft");
+                    }}
+                  />
+                  <Label htmlFor="draft-status" className="flex items-center">
+                    <div className="h-2 w-2 rounded-full bg-gray-500 mr-2"></div>
+                    Draft
+                  </Label>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Platforms</Label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="google-platform"
+                    checked={editPlatforms.includes("google")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setEditPlatforms([...editPlatforms, "google"]);
+                      } else {
+                        setEditPlatforms(editPlatforms.filter(p => p !== "google"));
+                      }
+                    }} 
+                  />
+                  <Label htmlFor="google-platform" className="flex items-center">
+                    <SearchIcon className="h-3 w-3 text-red-500 mr-2" />
+                    Google
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="meta-platform"
+                    checked={editPlatforms.includes("meta")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setEditPlatforms([...editPlatforms, "meta"]);
+                      } else {
+                        setEditPlatforms(editPlatforms.filter(p => p !== "meta"));
+                      }
+                    }}
+                  />
+                  <Label htmlFor="meta-platform" className="flex items-center">
+                    <Facebook className="h-3 w-3 text-blue-500 mr-2" />
+                    Meta
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="linkedin-platform"
+                    checked={editPlatforms.includes("linkedin")} 
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setEditPlatforms([...editPlatforms, "linkedin"]);
+                      } else {
+                        setEditPlatforms(editPlatforms.filter(p => p !== "linkedin"));
+                      }
+                    }}
+                  />
+                  <Label htmlFor="linkedin-platform" className="flex items-center">
+                    <Linkedin className="h-3 w-3 text-cyan-500 mr-2" />
+                    LinkedIn
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditCampaign}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Campaign Alert */}
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent className="animate-in fade-in-0 zoom-in-95 duration-300">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the campaign
+              {currentCampaign?.name && <strong> "{currentCampaign.name}"</strong>}. 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCampaign} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

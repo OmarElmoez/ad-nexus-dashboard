@@ -38,10 +38,6 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="campaigns" element={<CampaignsPage />} />
-          </Route>
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<DashboardLayout />}>
             <Route path="users" element={<UserManagementPage />} />
           </Route>
         </Route>

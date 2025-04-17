@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ import {
   LogOut,
   Menu,
   Newspaper,
-  Settings,
   UserCog,
   Users,
 } from "lucide-react";
@@ -44,22 +42,7 @@ const navItems: NavItem[] = [
     icon: Newspaper,
   },
   {
-    title: "Create Campaign",
-    href: "/dashboard/create-campaign",
-    icon: FilePlus,
-  },
-  {
-    title: "Analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
-  {
-    title: "User Management",
+    title: "Users",
     href: "/dashboard/users",
     icon: Users,
     adminOnly: true,
