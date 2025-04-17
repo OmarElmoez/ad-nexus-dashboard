@@ -16,7 +16,17 @@ import {
 import { useEffect } from "react";
 import { useCampaignStore } from "@/store/useCampaignStore";
 import { useAuthStore } from "@/store/useAuthStore";
-import { ArrowUpRight, BarChart3, MousePointerClick, Users } from "lucide-react";
+import { 
+  ArrowUpRight, 
+  BarChart3, 
+  ChevronUp, 
+  DollarSign, 
+  LineChart, 
+  MousePointerClick, 
+  Percent, 
+  TrendingUp, 
+  Users 
+} from "lucide-react";
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
@@ -46,7 +56,7 @@ const DashboardPage = () => {
     { name: "LinkedIn", value: campaigns.filter(c => c.platforms.includes("linkedin")).length },
   ].filter(item => item.value > 0); // Only show platforms with campaigns
 
-  const PLATFORM_COLORS = ["#4285F4", "#1877F2", "#0A66C2"];
+  const PLATFORM_COLORS = ["#EF4444", "#1877F2", "#0A66C2"];
 
   // Data for campaign performance chart
   const performanceData = campaigns.map(campaign => ({
@@ -67,63 +77,104 @@ const DashboardPage = () => {
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <div className="stats-card stats-card-impressions">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Impressions</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-full bg-brand-light-purple p-2">
+              <BarChart3 className="h-4 w-4 text-brand-purple" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalImpressions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {campaigns.length} campaigns
-            </p>
+            <div className="mt-2 flex items-center">
+              <span className="text-xs text-muted-foreground">
+                Across {campaigns.length} campaigns
+              </span>
+              <span className="ml-2 flex items-center text-xs text-green-500">
+                <ChevronUp className="h-3 w-3" />
+                12.5%
+              </span>
+            </div>
           </CardContent>
-        </Card>
+        </div>
 
-        <Card>
+        <div className="stats-card stats-card-clicks">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-full bg-brand-light-blue p-2">
+              <MousePointerClick className="h-4 w-4 text-brand-blue" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalClicks.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              CTR: {averageCTR.toFixed(2)}%
-            </p>
+            <div className="mt-2 flex items-center">
+              <div className="flex items-center gap-1">
+                <Percent className="h-3 w-3 text-brand-blue" />
+                <span className="text-xs font-medium text-brand-blue">
+                  CTR: {averageCTR.toFixed(2)}%
+                </span>
+              </div>
+              <span className="ml-2 flex items-center text-xs text-green-500">
+                <ChevronUp className="h-3 w-3" />
+                8.2%
+              </span>
+            </div>
           </CardContent>
-        </Card>
+        </div>
 
-        <Card>
+        <div className="stats-card stats-card-conversions">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Conversions</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-full bg-orange-100 p-2">
+              <Users className="h-4 w-4 text-brand-orange" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalConversions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Conv. Rate: {totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0}%
-            </p>
+            <div className="mt-2 flex items-center">
+              <div className="flex items-center gap-1">
+                <Percent className="h-3 w-3 text-brand-orange" />
+                <span className="text-xs font-medium text-brand-orange">
+                  Conv. Rate: {totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0}%
+                </span>
+              </div>
+              <span className="ml-2 flex items-center text-xs text-green-500">
+                <ChevronUp className="h-3 w-3" />
+                5.3%
+              </span>
+            </div>
           </CardContent>
-        </Card>
+        </div>
 
-        <Card>
+        <div className="stats-card stats-card-spend">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Ad Spend</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            <div className="rounded-full bg-green-100 p-2">
+              <DollarSign className="h-4 w-4 text-brand-green" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalCost.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Avg. CPC: ${averageCPC.toFixed(2)}
-            </p>
+            <div className="mt-2 flex items-center">
+              <div className="flex items-center gap-1">
+                <LineChart className="h-3 w-3 text-brand-green" />
+                <span className="text-xs font-medium text-brand-green">
+                  Avg. CPC: ${averageCPC.toFixed(2)}
+                </span>
+              </div>
+              <span className="ml-2 flex items-center text-xs text-red-500">
+                <TrendingUp className="h-3 w-3" />
+                3.7%
+              </span>
+            </div>
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="col-span-1">
-          <CardHeader>
+        <Card className="col-span-1 overflow-hidden border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
+          <CardHeader className="bg-white bg-opacity-70">
             <CardTitle>Campaign Performance</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -144,8 +195,8 @@ const DashboardPage = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="clicks" fill="#9b87f5" name="Clicks" />
-                  <Bar dataKey="impressions" fill="#7E69AB" name="Impressions (÷100)" />
+                  <Bar dataKey="clicks" fill="#8a4fff" name="Clicks" />
+                  <Bar dataKey="impressions" fill="#6e35d9" name="Impressions (÷100)" />
                   <Bar dataKey="cost" fill="#F97316" name="Cost ($)" />
                 </BarChart>
               </ResponsiveContainer>
@@ -157,8 +208,8 @@ const DashboardPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1">
-          <CardHeader>
+        <Card className="col-span-1 overflow-hidden border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
+          <CardHeader className="bg-white bg-opacity-70">
             <CardTitle>Platform Distribution</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">

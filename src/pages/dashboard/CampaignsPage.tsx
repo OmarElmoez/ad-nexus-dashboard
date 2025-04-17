@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Calendar as CalendarIcon, 
   Check, 
@@ -52,7 +52,10 @@ import {
   Play, 
   Plus, 
   Search as SearchIcon, 
-  Trash2
+  Trash2,
+  CheckCircle2,
+  CircleDashed,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -60,11 +63,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Campaign, PlatformType } from "@/store/useCampaignStore";
+import { Campaign, PlatformConnection, PlatformType } from "@/store/useCampaignStore";
 
 const CampaignsPage = () => {
   const { user } = useAuthStore();
-  const { campaigns, fetchCampaigns, toggleCampaignStatus, deleteCampaign, createCampaign, updateCampaign } = useCampaignStore();
+  const { 
+    campaigns, 
+    connections,
+    fetchCampaigns, 
+    toggleCampaignStatus, 
+    deleteCampaign, 
+    createCampaign, 
+    updateCampaign,
+    connectPlatform 
+  } = useCampaignStore();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -77,10 +89,16 @@ const CampaignsPage = () => {
   const [platforms, setPlatforms] = useState<PlatformType[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [status, setStatus] = useState<"active" | "paused" | "draft">("draft");
   
   // Form states for edit dialog
   const [editStatus, setEditStatus] = useState<"active" | "paused" | "draft">("active");
   const [editPlatforms, setEditPlatforms] = useState<PlatformType[]>([]);
+  
+  // Platform connection dialog
+  const [isPlatformDialogOpen, setIsPlatformDialogOpen] = useState(false);
+  const [connectingPlatform, setConnectingPlatform] = useState<PlatformType | null>(null);
+  const [accountId, setAccountId] = useState("");
   
   useEffect(() => {
     // If admin, fetch all campaigns, otherwise fetch user's campaigns
@@ -103,7 +121,7 @@ const CampaignsPage = () => {
       platforms,
       startDate,
       endDate,
-      status: "draft",
+      status,
       userId: user.id
     });
     
@@ -118,6 +136,7 @@ const CampaignsPage = () => {
     setPlatforms([]);
     setStartDate(new Date());
     setEndDate(undefined);
+    setStatus("draft");
   };
   
   const handleEditCampaign = () => {
@@ -150,6 +169,35 @@ const CampaignsPage = () => {
     deleteCampaign(currentCampaign.id);
     toast.success("Campaign deleted successfully!");
     setIsDeleteAlertOpen(false);
+  };
+
+  const handleConnectPlatform = async () => {
+    if (!connectingPlatform || !accountId) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
+    await connectPlatform(connectingPlatform, accountId);
+    toast.success(`${connectingPlatform} account connected successfully!`);
+    setIsPlatformDialogOpen(false);
+    setConnectingPlatform(null);
+    setAccountId("");
+  };
+
+  const togglePlatformSelection = (platform: PlatformType) => {
+    if (platforms.includes(platform)) {
+      setPlatforms(platforms.filter(p => p !== platform));
+    } else {
+      setPlatforms([...platforms, platform]);
+    }
+  };
+
+  const toggleEditPlatformSelection = (platform: PlatformType) => {
+    if (editPlatforms.includes(platform)) {
+      setEditPlatforms(editPlatforms.filter(p => p !== platform));
+    } else {
+      setEditPlatforms([...editPlatforms, platform]);
+    }
   };
 
   const getPlatformBadge = (platform: string) => {
@@ -186,21 +234,22 @@ const CampaignsPage = () => {
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
+          <Badge className="status-badge status-badge-active flex items-center gap-1">
             <Play className="h-3 w-3" />
             Active
           </Badge>
         );
       case "paused":
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 flex items-center gap-1">
+          <Badge variant="outline" className="status-badge status-badge-paused flex items-center gap-1">
             <Pause className="h-3 w-3" />
             Paused
           </Badge>
         );
       case "draft":
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-200">
+          <Badge variant="outline" className="status-badge status-badge-draft flex items-center gap-1">
+            <CircleDashed className="h-3 w-3" />
             Draft
           </Badge>
         );
@@ -224,13 +273,104 @@ const CampaignsPage = () => {
             Manage your advertising campaigns across multiple platforms.
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-brand-purple hover:bg-brand-dark-purple">
           <Plus className="mr-2 h-4 w-4" />
           New Campaign
         </Button>
       </div>
 
-      <Card>
+      {/* Platform Connection Icons */}
+      <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-r from-gray-50 to-white">
+        <CardHeader>
+          <CardTitle className="text-lg">Platform Connections</CardTitle>
+          <CardDescription>
+            Connect your ad accounts to import campaigns and data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            {/* Google */}
+            {connections.find(c => c.type === "google") ? (
+              <div className="flex flex-col items-center">
+                <div className="platform-icon platform-icon-google platform-icon-selected">
+                  <SearchIcon className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  Connected
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div 
+                  className="platform-icon platform-icon-google cursor-pointer"
+                  onClick={() => {
+                    setConnectingPlatform("google");
+                    setIsPlatformDialogOpen(true);
+                  }}
+                >
+                  <SearchIcon className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium text-muted-foreground">Google Ads</span>
+              </div>
+            )}
+            
+            {/* Meta */}
+            {connections.find(c => c.type === "meta") ? (
+              <div className="flex flex-col items-center">
+                <div className="platform-icon platform-icon-meta platform-icon-selected">
+                  <Facebook className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  Connected
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div 
+                  className="platform-icon platform-icon-meta cursor-pointer"
+                  onClick={() => {
+                    setConnectingPlatform("meta");
+                    setIsPlatformDialogOpen(true);
+                  }}
+                >
+                  <Facebook className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium text-muted-foreground">Meta Ads</span>
+              </div>
+            )}
+            
+            {/* LinkedIn */}
+            {connections.find(c => c.type === "linkedin") ? (
+              <div className="flex flex-col items-center">
+                <div className="platform-icon platform-icon-linkedin platform-icon-selected">
+                  <Linkedin className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  Connected
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div 
+                  className="platform-icon platform-icon-linkedin cursor-pointer"
+                  onClick={() => {
+                    setConnectingPlatform("linkedin");
+                    setIsPlatformDialogOpen(true);
+                  }}
+                >
+                  <Linkedin className="h-6 w-6" />
+                </div>
+                <span className="mt-2 text-xs font-medium text-muted-foreground">LinkedIn Ads</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-white to-gray-50">
         <CardHeader>
           <CardTitle>All Campaigns</CardTitle>
           <CardDescription>
@@ -315,7 +455,7 @@ const CampaignsPage = () => {
                       <p className="text-muted-foreground mb-4">
                         Create your first advertising campaign to get started.
                       </p>
-                      <Button onClick={() => setIsCreateDialogOpen(true)}>
+                      <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-brand-purple hover:bg-brand-dark-purple">
                         <Plus className="mr-2 h-4 w-4" />
                         New Campaign
                       </Button>
@@ -357,50 +497,78 @@ const CampaignsPage = () => {
                 onChange={(e) => setBudget(e.target.value)}
               />
             </div>
+            
+            <div className="grid gap-2">
+              <Label>Campaign Status</Label>
+              <RadioGroup value={status} onValueChange={(value) => setStatus(value as any)}>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="active" id="active" />
+                    <Label htmlFor="active" className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-green-500 mr-1"></div>
+                      Active
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="paused" id="paused" />
+                    <Label htmlFor="paused" className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-amber-500 mr-1"></div>
+                      Paused
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="draft" id="draft" />
+                    <Label htmlFor="draft" className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-gray-400 mr-1"></div>
+                      Draft
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+            
             <div className="grid gap-2">
               <Label>Platforms</Label>
               <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={platforms.includes("google")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setPlatforms([...platforms, "google"]);
-                      } else {
-                        setPlatforms(platforms.filter(p => p !== "google"));
-                      }
-                    }} 
-                  />
-                  <Label>Google</Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-google cursor-pointer",
+                    platforms.includes("google") && "platform-icon-selected ring-red-400"
+                  )}
+                  onClick={() => togglePlatformSelection("google")}
+                >
+                  <SearchIcon className="h-6 w-6" />
+                  {platforms.includes("google") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-red-600 bg-white rounded-full" />
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={platforms.includes("meta")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setPlatforms([...platforms, "meta"]);
-                      } else {
-                        setPlatforms(platforms.filter(p => p !== "meta"));
-                      }
-                    }}
-                  />
-                  <Label>Meta</Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-meta cursor-pointer",
+                    platforms.includes("meta") && "platform-icon-selected ring-blue-400"
+                  )}
+                  onClick={() => togglePlatformSelection("meta")}
+                >
+                  <Facebook className="h-6 w-6" />
+                  {platforms.includes("meta") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-blue-600 bg-white rounded-full" />
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    checked={platforms.includes("linkedin")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setPlatforms([...platforms, "linkedin"]);
-                      } else {
-                        setPlatforms(platforms.filter(p => p !== "linkedin"));
-                      }
-                    }}
-                  />
-                  <Label>LinkedIn</Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-linkedin cursor-pointer",
+                    platforms.includes("linkedin") && "platform-icon-selected ring-cyan-400"
+                  )}
+                  onClick={() => togglePlatformSelection("linkedin")}
+                >
+                  <Linkedin className="h-6 w-6" />
+                  {platforms.includes("linkedin") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-cyan-600 bg-white rounded-full" />
+                  )}
                 </div>
               </div>
             </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label>Start Date</Label>
@@ -459,7 +627,9 @@ const CampaignsPage = () => {
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateCampaign}>Create Campaign</Button>
+            <Button onClick={handleCreateCampaign} className="bg-brand-purple hover:bg-brand-dark-purple">
+              Create Campaign
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -476,101 +646,70 @@ const CampaignsPage = () => {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label>Campaign Status</Label>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="active-status"
-                    checked={editStatus === "active"} 
-                    onCheckedChange={(checked) => {
-                      if (checked) setEditStatus("active");
-                    }}
-                  />
-                  <Label htmlFor="active-status" className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                    Active
-                  </Label>
+              <RadioGroup value={editStatus} onValueChange={(value) => setEditStatus(value as any)}>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="active" id="edit-active" />
+                    <Label htmlFor="edit-active" className="flex items-center">
+                      <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                      Active
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="paused" id="edit-paused" />
+                    <Label htmlFor="edit-paused" className="flex items-center">
+                      <div className="h-2 w-2 rounded-full bg-amber-500 mr-2"></div>
+                      Paused
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="draft" id="edit-draft" />
+                    <Label htmlFor="edit-draft" className="flex items-center">
+                      <div className="h-2 w-2 rounded-full bg-gray-400 mr-2"></div>
+                      Draft
+                    </Label>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="paused-status"
-                    checked={editStatus === "paused"} 
-                    onCheckedChange={(checked) => {
-                      if (checked) setEditStatus("paused");
-                    }}
-                  />
-                  <Label htmlFor="paused-status" className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-amber-500 mr-2"></div>
-                    Paused
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="draft-status"
-                    checked={editStatus === "draft"} 
-                    onCheckedChange={(checked) => {
-                      if (checked) setEditStatus("draft");
-                    }}
-                  />
-                  <Label htmlFor="draft-status" className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-gray-500 mr-2"></div>
-                    Draft
-                  </Label>
-                </div>
-              </div>
+              </RadioGroup>
             </div>
             <div className="grid gap-2">
               <Label>Platforms</Label>
               <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="google-platform"
-                    checked={editPlatforms.includes("google")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setEditPlatforms([...editPlatforms, "google"]);
-                      } else {
-                        setEditPlatforms(editPlatforms.filter(p => p !== "google"));
-                      }
-                    }} 
-                  />
-                  <Label htmlFor="google-platform" className="flex items-center">
-                    <SearchIcon className="h-3 w-3 text-red-500 mr-2" />
-                    Google
-                  </Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-google cursor-pointer",
+                    editPlatforms.includes("google") && "platform-icon-selected ring-red-400"
+                  )}
+                  onClick={() => toggleEditPlatformSelection("google")}
+                >
+                  <SearchIcon className="h-6 w-6" />
+                  {editPlatforms.includes("google") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-red-600 bg-white rounded-full" />
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="meta-platform"
-                    checked={editPlatforms.includes("meta")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setEditPlatforms([...editPlatforms, "meta"]);
-                      } else {
-                        setEditPlatforms(editPlatforms.filter(p => p !== "meta"));
-                      }
-                    }}
-                  />
-                  <Label htmlFor="meta-platform" className="flex items-center">
-                    <Facebook className="h-3 w-3 text-blue-500 mr-2" />
-                    Meta
-                  </Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-meta cursor-pointer",
+                    editPlatforms.includes("meta") && "platform-icon-selected ring-blue-400"
+                  )}
+                  onClick={() => toggleEditPlatformSelection("meta")}
+                >
+                  <Facebook className="h-6 w-6" />
+                  {editPlatforms.includes("meta") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-blue-600 bg-white rounded-full" />
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="linkedin-platform"
-                    checked={editPlatforms.includes("linkedin")} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setEditPlatforms([...editPlatforms, "linkedin"]);
-                      } else {
-                        setEditPlatforms(editPlatforms.filter(p => p !== "linkedin"));
-                      }
-                    }}
-                  />
-                  <Label htmlFor="linkedin-platform" className="flex items-center">
-                    <Linkedin className="h-3 w-3 text-cyan-500 mr-2" />
-                    LinkedIn
-                  </Label>
+                <div 
+                  className={cn(
+                    "platform-icon platform-icon-linkedin cursor-pointer",
+                    editPlatforms.includes("linkedin") && "platform-icon-selected ring-cyan-400"
+                  )}
+                  onClick={() => toggleEditPlatformSelection("linkedin")}
+                >
+                  <Linkedin className="h-6 w-6" />
+                  {editPlatforms.includes("linkedin") && (
+                    <Check className="absolute top-0 right-0 h-4 w-4 text-cyan-600 bg-white rounded-full" />
+                  )}
                 </div>
               </div>
             </div>
@@ -579,7 +718,9 @@ const CampaignsPage = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleEditCampaign}>Save Changes</Button>
+            <Button onClick={handleEditCampaign} className="bg-brand-purple hover:bg-brand-dark-purple">
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -603,6 +744,37 @@ const CampaignsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* Platform Connection Dialog */}
+      <Dialog open={isPlatformDialogOpen} onOpenChange={setIsPlatformDialogOpen}>
+        <DialogContent className="sm:max-w-[450px] animate-in fade-in-0 zoom-in-95 duration-300">
+          <DialogHeader>
+            <DialogTitle>Connect {connectingPlatform?.charAt(0).toUpperCase() + connectingPlatform?.slice(1)} Account</DialogTitle>
+            <DialogDescription>
+              Enter your account ID to connect your {connectingPlatform} advertising account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="accountId">Account ID</Label>
+              <Input
+                id="accountId"
+                placeholder="Enter your account ID"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPlatformDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConnectPlatform} className="bg-brand-purple hover:bg-brand-dark-purple">
+              Connect Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
