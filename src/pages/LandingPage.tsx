@@ -314,14 +314,14 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section - Updated to use testimonials button */}
+      {/* CTA Section - Updated to properly display client opinions */}
       <section className="py-20 bg-brand-purple text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Campaign Management?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Join thousands of marketers who are saving time and improving results with our platform.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
             <Link to="/register">
               <Button size="lg" className="bg-white text-brand-purple hover:bg-gray-100 w-full sm:w-auto">
                 Sign Up Free
@@ -331,6 +331,84 @@ const LandingPage = () => {
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
                 Client Opinions
               </Button>
+            </Link>
+          </div>
+          
+          {/* Client Testimonials Preview */}
+          <div className="mt-12 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Testimonial 1 */}
+            <div className="bg-white text-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-brand-light-purple rounded-full flex items-center justify-center text-xl font-bold text-brand-purple">
+                  JD
+                </div>
+                <div className="ml-4 text-left">
+                  <h3 className="font-semibold">Jane Doe</h3>
+                  <p className="text-sm text-gray-600">Marketing Director</p>
+                </div>
+              </div>
+              <p className="text-left">
+                "AdNexus has revolutionized how we manage our campaigns. We've seen a 40% increase in ROI since making the switch."
+              </p>
+              <div className="mt-4 flex text-brand-purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </div>
+            
+            {/* Testimonial 2 */}
+            <div className="bg-white text-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-brand-light-purple rounded-full flex items-center justify-center text-xl font-bold text-brand-purple">
+                  MS
+                </div>
+                <div className="ml-4 text-left">
+                  <h3 className="font-semibold">Michael Smith</h3>
+                  <p className="text-sm text-gray-600">Digital Ad Specialist</p>
+                </div>
+              </div>
+              <p className="text-left">
+                "The unified dashboard saves me hours every week. I can now manage all my client campaigns in a fraction of the time."
+              </p>
+              <div className="mt-4 flex text-brand-purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </div>
+            
+            {/* Testimonial 3 */}
+            <div className="bg-white text-gray-800 p-6 rounded-lg shadow-md">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-brand-light-purple rounded-full flex items-center justify-center text-xl font-bold text-brand-purple">
+                  AJ
+                </div>
+                <div className="ml-4 text-left">
+                  <h3 className="font-semibold">Alex Johnson</h3>
+                  <p className="text-sm text-gray-600">E-commerce Owner</p>
+                </div>
+              </div>
+              <p className="text-left">
+                "The analytics and insights have helped us optimize our ad spend and target the right audiences. Our conversion rate is up 25%!"
+              </p>
+              <div className="mt-4 flex text-brand-purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <Link to="/testimonials">
+              <Button variant="link" className="text-white underline">View all client testimonials</Button>
             </Link>
           </div>
         </div>
