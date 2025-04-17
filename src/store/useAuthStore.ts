@@ -20,6 +20,7 @@ interface AuthState {
   logout: () => void;
   error: string | null;
   clearError: () => void;
+  checkAuth: () => void;  // Added the missing checkAuth function
 }
 
 // Mock user data
@@ -101,5 +102,22 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   clearError: () => {
     set({ error: null });
+  },
+  
+  // Add checkAuth function to check if user is authenticated
+  checkAuth: () => {
+    // Check if there's a stored token or session
+    // For this mock implementation, we'll just check local storage
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        set({ user, isAuthenticated: true });
+      }
+    } catch (error) {
+      console.error("Error checking authentication status:", error);
+      // If there's an error, ensure the user is logged out
+      set({ user: null, isAuthenticated: false });
+    }
   }
 }));

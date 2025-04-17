@@ -1,16 +1,17 @@
+
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 
 import LandingPage from "./pages/LandingPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 import Index from "./pages/Index";
-import DashboardLayout from "./layouts/DashboardLayout";
-import DashboardPage from "./pages/DashboardPage";
-import CampaignsPage from "./pages/CampaignsPage";
-import UserManagementPage from "./pages/UserManagementPage";
+import DashboardLayout from "./components/layout/DashboardLayout";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import CampaignsPage from "./pages/dashboard/CampaignsPage";
+import UserManagementPage from "./pages/admin/UserManagementPage";
 import NotFound from "./pages/NotFound";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/auth/PrivateRoute";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
 import TestimonialsPage from "./pages/TestimonialsPage";
@@ -20,7 +21,7 @@ function App() {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   return (
     <>
