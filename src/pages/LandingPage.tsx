@@ -328,7 +328,7 @@ const LandingPage = () => {
               </Button>
             </Link>
             <Link to="/testimonials">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="border-white hover:bg-white/10 w-full sm:w-auto">
                 Client Opinions
               </Button>
             </Link>
