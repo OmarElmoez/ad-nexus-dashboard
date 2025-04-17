@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -34,7 +33,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Updated with new ad-related image */}
       <section className="bg-gradient-to-br from-white via-brand-light-purple to-white py-20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between">
@@ -51,15 +50,17 @@ const LandingPage = () => {
                     Get Started Free
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-light-purple w-full sm:w-auto">
-                  Request Demo
-                </Button>
+                <Link to="/testimonials">
+                  <Button size="lg" variant="outline" className="border-brand-purple text-brand-purple hover:bg-brand-light-purple w-full sm:w-auto">
+                    Client Opinions
+                  </Button>
+                </Link>
               </div>
             </div>
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800" 
-                alt="Campaign Dashboard Mockup" 
+                src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&q=80&w=800" 
+                alt="Digital Marketing Dashboard" 
                 className="rounded-lg shadow-xl"
               />
             </div>
@@ -125,7 +126,7 @@ const LandingPage = () => {
             {/* Feature 5 */}
             <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition duration-300">
               <div className="w-14 h-14 bg-brand-light-purple rounded-full flex items-center justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9b87f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9b87f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <h3 className="text-xl font-semibold mb-4">Team Collaboration</h3>
               <p className="text-gray-600">
@@ -188,7 +189,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - Updated with flex layout for consistent button positioning */}
       <section id="pricing" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -200,14 +201,14 @@ const LandingPage = () => {
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Starter Plan */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition duration-300">
-              <div className="p-8">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition duration-300 flex flex-col h-full">
+              <div className="p-8 flex flex-col h-full">
                 <h3 className="text-xl font-semibold mb-2">Starter</h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold">$49</span>
                   <span className="text-gray-600">/month</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <svg className="w-5 h-5 mr-2 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                     Up to 5 campaigns
@@ -225,24 +226,24 @@ const LandingPage = () => {
                     Email support
                   </li>
                 </ul>
-                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple">
+                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple mt-auto">
                   Start Free Trial
                 </Button>
               </div>
             </div>
             
             {/* Professional Plan */}
-            <div className="bg-brand-light-purple rounded-lg border-2 border-brand-purple shadow-md hover:shadow-lg transition duration-300 transform scale-105">
+            <div className="bg-brand-light-purple rounded-lg border-2 border-brand-purple shadow-md hover:shadow-lg transition duration-300 transform scale-105 flex flex-col h-full">
               <div className="bg-brand-purple text-white py-2 px-4 rounded-t-lg text-center text-sm font-medium">
                 MOST POPULAR
               </div>
-              <div className="p-8">
+              <div className="p-8 flex flex-col h-full">
                 <h3 className="text-xl font-semibold mb-2">Professional</h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold">$99</span>
                   <span className="text-gray-600">/month</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <svg className="w-5 h-5 mr-2 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                     Up to 20 campaigns
@@ -264,21 +265,21 @@ const LandingPage = () => {
                     Team collaboration (3 users)
                   </li>
                 </ul>
-                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple">
+                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple mt-auto">
                   Start Free Trial
                 </Button>
               </div>
             </div>
             
             {/* Enterprise Plan */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition duration-300">
-              <div className="p-8">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition duration-300 flex flex-col h-full">
+              <div className="p-8 flex flex-col h-full">
                 <h3 className="text-xl font-semibold mb-2">Enterprise</h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold">$249</span>
                   <span className="text-gray-600">/month</span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-center">
                     <svg className="w-5 h-5 mr-2 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                     Unlimited campaigns
@@ -304,7 +305,7 @@ const LandingPage = () => {
                     API access
                   </li>
                 </ul>
-                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple">
+                <Button className="w-full bg-brand-purple hover:bg-brand-dark-purple mt-auto">
                   Contact Sales
                 </Button>
               </div>
@@ -313,7 +314,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - Updated to use testimonials button */}
       <section className="py-20 bg-brand-purple text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Campaign Management?</h2>
@@ -326,9 +327,11 @@ const LandingPage = () => {
                 Sign Up Free
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
-              Schedule Demo
-            </Button>
+            <Link to="/testimonials">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                Client Opinions
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

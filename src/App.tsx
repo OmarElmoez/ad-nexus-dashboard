@@ -1,68 +1,56 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
+
 import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import Index from "./pages/Index";
+import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardPage from "./pages/DashboardPage";
+import CampaignsPage from "./pages/CampaignsPage";
+import UserManagementPage from "./pages/UserManagementPage";
 import NotFound from "./pages/NotFound";
-import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegisterPage";
-import DashboardLayout from "./components/layout/DashboardLayout";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import CampaignsPage from "./pages/dashboard/CampaignsPage";
-import PrivateRoute from "./components/auth/PrivateRoute";
+import PrivateRoute from "./components/PrivateRoute";
 import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
-import UserManagementPage from "./pages/admin/UserManagementPage";
+import TestimonialsPage from "./pages/TestimonialsPage";
 
-const queryClient = new QueryClient();
+function App() {
+  const { checkAuth } = useAuthStore();
 
-const App = () => {
-  const { isAuthenticated } = useAuthStore();
-
-  // This effect would be replaced with an actual auth check in a real app
   useEffect(() => {
-    // Just to make the store reactive
-    console.log("Auth status:", isAuthenticated ? "Logged in" : "Logged out");
-  }, [isAuthenticated]);
+    checkAuth();
+  }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-
-            {/* Protected routes */}
-            <Route element={<PrivateRoute />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/dashboard/campaigns" element={<CampaignsPage />} />
-                {/* Add more dashboard routes here */}
-              </Route>
-            </Route>
-
-            {/* Admin routes */}
-            <Route element={<PrivateRoute requiredRole="admin" />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard/users" element={<UserManagementPage />} />
-                <Route path="/dashboard/admin" element={<UserManagementPage />} />
-              </Route>
-            </Route>
-
-            {/* Fallback routes */}
-            <Route path="/dashboard/*" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/index" element={<Index />} />
+        
+        {/* Protected Routes */}
+        <Route element={<PrivateRoute />}>
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="campaigns" element={<CampaignsPage />} />
+          </Route>
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<DashboardLayout />}>
+            <Route path="users" element={<UserManagementPage />} />
+          </Route>
+        </Route>
+        
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </>
   );
-};
+}
 
 export default App;
